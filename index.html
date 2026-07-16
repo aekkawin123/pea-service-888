@@ -1,1 +1,871 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PEA Service 888</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI','Noto Sans Thai',Tahoma,sans-serif;background:#F7F8FA;color:#1A1D23;font-size:14px}
+:root{--brand:#5B2D8E;--brandL:#7B4DB8;--brandBg:#F3EEF9;--accent:#E8A020;--pass:#1A8A4A;--passBg:#E8F7EE;--fail:#C0392B;--failBg:#FDECEA;--warn:#D97706;--bg:#F7F8FA;--panel:#fff;--border:#E2E5EA;--muted:#6B7280}
 
+/* ── Header ── */
+#app-header{background:var(--brand);position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(91,45,142,.3)}
+.header-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12;padding:11px 16px}
+.pea-badge{background:#fff;border-radius:7px;padding:4px 9px;font-weight:900;font-size:15px;color:var(--brand);letter-spacing:1px}
+.header-title{color:#fff;font-weight:700;font-size:15px;line-height:1.2}
+.header-sub{color:rgba(255,255,255,.7);font-size:10px}
+.step-counter{margin-left:auto;background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+
+/* ── Step rail ── */
+#step-rail{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto}
+.rail-inner{max-width:720px;margin:0 auto;display:flex}
+.rail-btn{flex:1;min-width:68px;padding:9px 3px;border:none;cursor:pointer;background:transparent;border-bottom:3px solid transparent;color:var(--muted);font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s;font-size:10px;font-weight:500}
+.rail-btn.active{border-bottom-color:var(--brand);color:var(--brand);font-weight:700}
+.rail-btn .ico{font-size:18px}
+.rail-btn.active .ico{font-size:20px}
+
+/* ── Content ── */
+#content{max-width:720px;margin:0 auto;padding:18px 14px 100px}
+.panel{background:#fff;border-radius:13px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px}
+
+/* ── Section heading ── */
+.sec-title{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.sec-bar{width:4px;height:20px;border-radius:2px;background:var(--brand);flex-shrink:0}
+.sec-label{font-weight:700;font-size:14px}
+
+/* ── Form controls ── */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:#1A1D23;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:var(--brand)}
+.field select{appearance:none;cursor:pointer}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+
+/* ── Pass/Fail buttons ── */
+.pf-group{display:flex;gap:6px;flex-wrap:wrap}
+.pf-btn{padding:6px 13px;border-radius:6px;border:1.5px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);transition:all .15s;font-family:inherit}
+.pf-btn.pass{border-color:var(--pass);background:var(--passBg);color:var(--pass)}
+.pf-btn.fail{border-color:var(--fail);background:var(--failBg);color:var(--fail)}
+.pf-btn.warn{border-color:var(--warn);background:#FEF3DC;color:var(--warn)}
+
+/* ── Check item ── */
+.check-item{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)}
+.chk-box{width:21px;height:21px;border-radius:5px;border:2px solid var(--border);background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;margin-top:1px;transition:all .15s}
+.chk-box.on{border-color:var(--brand);background:var(--brand)}
+
+/* ── Measurement table ── */
+.meas-table{width:100%;border-collapse:collapse;font-size:12px;overflow-x:auto;display:block}
+.meas-table th{background:var(--brandBg);padding:7px 10px;color:var(--brand);font-weight:700;border:1px solid #ddd;text-align:center}
+.meas-table td{padding:5px 8px;border:1px solid #eee;text-align:center}
+.meas-table tr:nth-child(even) td{background:#FAFBFC}
+.meas-table input{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;font-family:inherit}
+
+/* ── Photo upload ── */
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photo-box{border:2px dashed var(--border);border-radius:8px;padding:20px 10px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:#FAFBFC;transition:all .15s;text-align:center}
+.photo-box:hover{border-color:var(--brand);background:var(--brandBg)}
+.photo-box img{width:100%;height:90px;object-fit:cover;border-radius:6px;border:2px solid var(--brand)}
+.photo-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+
+/* ── Voltage row ── */
+.v-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.v-phase{min-width:45px;font-size:13px;font-weight:600;color:var(--brand)}
+.v-row input{flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;font-family:inherit}
+.v-unit{font-size:11px;color:var(--muted);min-width:14px}
+
+/* ── Signature pad ── */
+.sig-wrap{border:2px solid var(--border);border-radius:8px;background:#FAFBFC;position:relative;overflow:hidden}
+.sig-wrap canvas{display:block;width:100%;height:90px;cursor:crosshair}
+.sig-clear{position:absolute;top:5px;right:5px;background:#fff;border:1px solid var(--border);border-radius:5px;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--muted);font-family:inherit}
+
+/* ── Bottom nav ── */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:11px 14px;display:flex;gap:9px;z-index:100}
+.nav-inner{max-width:720px;margin:0 auto;display:flex;gap:9px;width:100%}
+.btn-back{flex:1;padding:11px 0;border:2px solid var(--border);border-radius:9px;background:#fff;color:#1A1D23;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-next{flex:2;padding:11px 0;border:none;border-radius:9px;background:var(--brand);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-submit{flex:1;padding:12px 0;border:none;border-radius:9px;background:var(--pass);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-preview{flex:1;padding:12px 0;border:2px solid var(--brand);border-radius:9px;background:#fff;color:var(--brand);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── Cap table ── */
+.cap-table{width:100%;border-collapse:collapse;font-size:11px}
+.cap-table th{background:#E0F2F7;padding:6px 7px;color:#0E7490;font-weight:700;border:1px solid #ccc;text-align:center}
+.cap-table td{padding:4px 5px;border:1px solid #eee;text-align:center}
+.cap-table tr:nth-child(even) td{background:#F0FBFD}
+.cap-table input{width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:center;font-family:inherit}
+.pf-sm{padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-size:10px;font-weight:700;cursor:pointer;background:#fff;color:var(--muted);font-family:inherit}
+.pf-sm.p{border-color:var(--pass);background:var(--passBg);color:var(--pass)}
+.pf-sm.f{border-color:var(--fail);background:var(--failBg);color:var(--fail)}
+
+/* ── PDF Modal ── */
+#pdf-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);overflow-y:auto;padding:20px 10px}
+#pdf-modal.open{display:block}
+.modal-toolbar{position:sticky;top:0;z-index:10;background:#1A1D23;padding:10px 16px;display:flex;align-items:center;gap:10px;border-radius:10px;margin-bottom:12px;max-width:820px;margin-left:auto;margin-right:auto}
+.modal-toolbar h3{color:#fff;font-size:14px;font-weight:700;flex:1}
+.btn-dl{padding:9px 20px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.btn-close-modal{padding:9px 14px;background:#374151;color:#fff;border:none;border-radius:7px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-dl:disabled{opacity:.6;cursor:not-allowed}
+
+/* ── PDF Document (inside modal + print) ── */
+#pdf-doc{background:#fff;max-width:794px;margin:0 auto;padding:24px 28px;font-family:'Segoe UI','Noto Sans Thai',sans-serif;color:#111;font-size:10px;line-height:1.5}
+.pdf-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--brand);padding-bottom:10px;margin-bottom:14px}
+.pdf-badge{background:var(--brand);color:#fff;border-radius:7px;padding:5px 11px;font-weight:900;font-size:18px;letter-spacing:1px}
+.pdf-title{font-size:16px;font-weight:800;color:var(--brand)}
+.pdf-sub{font-size:10px;color:#6b7280}
+.pdf-sec{margin-bottom:12px;page-break-inside:avoid}
+.pdf-sec-hd{background:var(--brand);color:#fff;padding:4px 9px;font-size:11px;font-weight:700;border-radius:4px 4px 0 0}
+.pdf-sec-hd.teal{background:#0E7490}
+.pdf-sec-body{border:1px solid #e5e7eb;border-top:none;padding:8px 10px;border-radius:0 0 4px 4px}
+.pdf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.pdf-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px}
+.pdf-row{display:flex;border-bottom:1px solid #f3f4f6;padding:3px 0;gap:6px}
+.pdf-row .lbl{min-width:160px;font-size:10px;color:#6b7280;font-weight:600}
+.pdf-row .val{flex:1;font-size:10px;color:#111}
+.pdf-row .unt{font-size:10px;color:#9ca3af}
+.pdf-table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:6px}
+.pdf-table th{background:#ede9f7;padding:5px 7px;border:1px solid #d1d5db;color:var(--brand);font-weight:700;text-align:center}
+.pdf-table.teal th{background:#e0f2f7;color:#0E7490}
+.pdf-table td{padding:3px 7px;border:1px solid #e5e7eb;text-align:center}
+.pdf-table tr:nth-child(even) td{background:#fafafa}
+.pdf-pass{color:#1a8a4a;font-weight:700}
+.pdf-fail{color:#c0392b;font-weight:700}
+.pdf-warn{color:#d97706;font-weight:700}
+.pdf-photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pdf-photo-grid img{width:100%;height:70px;object-fit:cover;border-radius:4px;border:1px solid #e5e7eb}
+.pdf-photo-cap{font-size:8px;color:#6b7280;text-align:center;margin-top:2px;line-height:1.2}
+.sig-box{text-align:center;border:1px solid #e5e7eb;border-radius:6px;padding:8px;min-height:100px}
+.sig-box img{max-height:50px;max-width:100%;object-fit:contain;display:block;margin:0 auto 4px}
+.sig-line{height:40px;border-bottom:1px solid #9ca3af;margin-bottom:4px}
+.pdf-footer{text-align:center;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:6px;margin-top:8px}
+.pdf-chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.pdf-chk{display:flex;gap:5px;align-items:center;padding:2px 0;border-bottom:1px solid #f9fafb;font-size:9.5px}
+
+@media print{
+  #app-header,#step-rail,#bottom-nav,#pdf-modal .modal-toolbar{display:none!important}
+  body{background:#fff}
+  #pdf-doc{padding:12px;max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ APP HEADER ═══════════════════ -->
+<div id="app-header">
+  <div class="header-inner">
+    <div class="pea-badge">PEA</div>
+    <div>
+      <div class="header-title">PEA Service 888</div>
+      <div class="header-sub">Provincial Electricity Authority – Field Inspection</div>
+    </div>
+    <div class="step-counter" id="step-counter">1/6</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ STEP RAIL ═══════════════════ -->
+<div id="step-rail">
+  <div class="rail-inner" id="rail"></div>
+</div>
+
+<!-- ═══════════════════ CONTENT ═══════════════════ -->
+<div id="content"></div>
+
+<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
+<div id="bottom-nav">
+  <div class="nav-inner" id="nav-btns"></div>
+</div>
+
+<!-- PDF render container (off-screen, always in DOM) -->
+<div id="pdf-doc" style="position:fixed;left:-9999px;top:0;width:794px;background:#fff;z-index:-1;opacity:0;pointer-events:none;overflow:hidden"></div>
+
+<!-- ═══════════════════ PDF MODAL ═══════════════════ -->
+<div id="pdf-modal">
+  <div class="modal-toolbar">
+    <h3>🗒️ ตัวอย่างรายงาน PDF</h3>
+    <button class="btn-dl" id="btn-dl-pdf" onclick="exportPDF()">⬇ Export PDF</button>
+    <button class="btn-close-modal" onclick="closePDFModal()">✕ ปิด</button>
+  </div>
+  <div id="pdf-preview"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// DATA MODEL
+// ════════════════════════════════════════════════════
+const thaiDate = () => new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+
+const D = {
+  step: 1,
+  info: { customer:'', site:'', location:'', device:'', engineer:'', date:'', workOrder:'', jobType:'' },
+  voltBefore:{},voltAfter:{},phaseBefore:['','',''],phaseAfter:['','',''],
+  photos:{},
+  meas:{ insul:{}, contact:{}, mdbInsul:{}, cable:{}, earthing:{} },
+  cap:{
+    capMfg:'',capType:'',capKvar:'',capYear:'',capFreq:'',capVolt:'',capCurr:'',capReact:'',capCap:'',
+    magMfg:'',magType:'',fuseMfg:'',fuseType:'',
+    pfcMfg:'',pfcType:'',pfcSerial:'',pfcFreq:'',pfcVolt:'',pfcCt:'',pfcPf:'',
+    visChecks:[false,false,false,false,false],visRemarks:['','','','',''],
+    measStatus:'',
+    steps: Array.from({length:12},()=>({ab:'',bc:'',ca:'',exp:'',fuseP:false,fuseF:false,magP:false,magF:false,rem:''}))
+  },
+  tr:{
+    mfg:'',serial:'',power:'',freq:'',hvV:'',lvV:'',vector:'',
+    checks: Array(8).fill(0).map(()=>({on:false,rem:''})),
+    oil: {t1:'',t2:'',t3:'',t4:'',t5:'',t6:'',status:''}
+  },
+  signs:{ testName:'',checkedName:'',witnessName:'', testSig:null,checkedSig:null,witnessSig:null }
+};
+
+const STEPS = [
+  {id:1,label:'ข้อมูลเบื้องต้น',icon:'📋'},
+  {id:2,label:'วัดแรงดัน/เฟส',icon:'⚡'},
+  {id:3,label:'ภาพปฏิบัติงาน',icon:'📷'},
+  {id:4,label:'ค่าวัดต่างๆ',icon:'🔬'},
+  {id:5,label:'หม้อแปลง',icon:'🔧'},
+  {id:6,label:'ลงนาม',icon:'✍️'},
+];
+const V_PHASES = ['A-B','B-C','C-A','A-N','B-N','C-N'];
+const INSUL_ROWS = ['HV to GND','LV to GND','HV to LV'];
+const INSUL_VOLTS = ['2,500','500','2,500'];
+const CONTACT_ROWS = ['A - a','B - b','C - c'];
+const MDB_ROWS = ['Phase A to G','Phase B to G','Phase C to G','Phase A to B','Phase B to C','Phase C to A'];
+const CABLE_ROWS = ['Phase A to G','Phase B to G','Phase C to G'];
+const EARTH_ROWS = ['Transformer / High Voltage','Meter','Low Voltage'];
+const TR_CHECKS = ['Cleaning and tightening','Bushing undamaged and clean','Connection Check','Oil level check','Oil drain valve check','Dehydrating breather (Silica Gel)','High Voltage Fuse','Low Voltage Fuse'];
+const PHOTO_LABELS = ['ชี้แจงรายละเอียดงาน','ปลด Drop Out Fuse','ตรวจสอบ Drop Out Fuse','ระดับน้ำมันหม้อแปลง','ถอดจุดต่อสาย HV/LV Bushing','ขัดทำความสะอาด HV/LV Bushing','กวดขัน HV Bushing','กวดขัน LV Bushing','ดูดฝุ่น MDB ก่อน','ดูดฝุ่น MDB หลัง','สับ Drop Out Fuse จ่ายไฟคืน','Transformer Name Plate'];
+
+// ════════════════════════════════════════════════════
+// RENDER HELPERS
+// ════════════════════════════════════════════════════
+const h = (tag, attrs='', inner='') => `<${tag} ${attrs}>${inner}</${tag}>`;
+const field = (label, inner) => `<div class="field"><label>${label}</label>${inner}</div>`;
+const inp = (id,val='',ph='',type='text') => `<input type="${type}" id="${id}" value="${esc(val)}" placeholder="${ph}" oninput="save('${id}',this.value)">`;
+const sel = (id,val,opts) => `<select id="${id}" onchange="save('${id}',this.value)">${opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;
+const esc = s => (s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const sec = (title,body,color='') => `<div class="sec-title"><div class="sec-bar" style="${color?'background:'+color:''}"></div><span class="sec-label">${title}</span></div>${body}`;
+
+function pfGroup(id, val, opts=['Pass','Fail','N/A']) {
+  return `<div class="pf-group">${opts.map(o=>{
+    let cls='pf-btn'; if(val===o) cls+= o==='Pass'?' pass':o==='Fail'?' fail':' warn';
+    return `<button class="${cls}" onclick="savePF('${id}','${o}')">${o==='Pass'?'✓ Pass':o==='Fail'?'✗ Fail':o}</button>`;
+  }).join('')}</div>`;
+}
+
+// ════════════════════════════════════════════════════
+// SAVE HELPERS
+// ════════════════════════════════════════════════════
+function save(id, val) {
+  const path = id.split('__');
+  if (path[0]==='info') D.info[path[1]] = val;
+  else if (path[0]==='vb') D.voltBefore[path[1]] = val;
+  else if (path[0]==='va') D.voltAfter[path[1]] = val;
+  else if (path[0]==='pb') D.phaseBefore[+path[1]] = val;
+  else if (path[0]==='pa') D.phaseAfter[+path[1]] = val;
+  else if (path[0]==='mi') { const k=path[1]; if(!D.meas.insul[k]) D.meas.insul[k]=''; D.meas.insul[k]=val; }
+  else if (path[0]==='mc') { D.meas.contact[path[1]]=val; }
+  else if (path[0]==='mm') { D.meas.mdbInsul[path[1]]=val; }
+  else if (path[0]==='mca') { D.meas.cable[path[1]]=val; }
+  else if (path[0]==='me') { D.meas.earthing[path[1]]=val; }
+  else if (path[0]==='cap') { D.cap[path[1]]=val; }
+  else if (path[0]==='capstep') { D.cap.steps[+path[1]][path[2]]=val; }
+  else if (path[0]==='capvis') { D.cap.visRemarks[+path[1]]=val; }
+  else if (path[0]==='tr') { D.tr[path[1]]=val; }
+  else if (path[0]==='trck') { D.tr.checks[+path[1]].rem=val; }
+  else if (path[0]==='troil') { D.tr.oil[path[1]]=val; }
+  else if (path[0]==='sg') { D.signs[path[1]]=val; }
+}
+function savePF(id, val) { save(id,val); render(); }
+function toggleCheck(type, idx) {
+  if(type==='tr') D.tr.checks[idx].on = !D.tr.checks[idx].on;
+  else if(type==='capvis') D.cap.visChecks[idx] = !D.cap.visChecks[idx];
+  render();
+}
+function toggleCapStep(idx, field) {
+  const s = D.cap.steps[idx];
+  if(field==='fuseP'){ s.fuseP=!s.fuseP; if(s.fuseP) s.fuseF=false; }
+  else if(field==='fuseF'){ s.fuseF=!s.fuseF; if(s.fuseF) s.fuseP=false; }
+  else if(field==='magP'){ s.magP=!s.magP; if(s.magP) s.magF=false; }
+  else if(field==='magF'){ s.magF=!s.magF; if(s.magF) s.magP=false; }
+  render();
+}
+
+// ════════════════════════════════════════════════════
+// PHOTO UPLOAD
+// ════════════════════════════════════════════════════
+function triggerPhoto(label) {
+  const fi = document.createElement('input');
+  fi.type='file'; fi.accept='image/*';
+  fi.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => { D.photos[label]={url:ev.target.result,name:file.name}; render(); };
+    r.readAsDataURL(file);
+  };
+  fi.click();
+}
+function removePhoto(label) { D.photos[label]=null; render(); }
+
+// ════════════════════════════════════════════════════
+// SIGNATURE PADS
+// ════════════════════════════════════════════════════
+const sigState = {};
+function initSig(id) {
+  const canvas = document.getElementById(id);
+  if(!canvas || sigState[id+'_init']) return;
+  sigState[id+'_init']=true;
+  let drawing=false, last=null;
+  const pos = e => { const r=canvas.getBoundingClientRect(); const s=e.touches?e.touches[0]:e; return {x:(s.clientX-r.left)*(canvas.width/r.width),y:(s.clientY-r.top)*(canvas.height/r.height)}; };
+  const start = e => { e.preventDefault(); drawing=true; last=pos(e); };
+  const draw = e => {
+    e.preventDefault(); if(!drawing) return;
+    const p=pos(e), ctx=canvas.getContext('2d');
+    ctx.strokeStyle='#5B2D8E'; ctx.lineWidth=2; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+    last=p;
+  };
+  const end = e => { e.preventDefault(); drawing=false; saveSig(id); };
+  canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',draw);
+  canvas.addEventListener('mouseup',end); canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchmove',draw,{passive:false});
+  canvas.addEventListener('touchend',end);
+}
+function saveSig(id) {
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const key = id==='sig-test'?'testSig':id==='sig-check'?'checkedSig':'witnessSig';
+  D.signs[key] = canvas.toDataURL();
+}
+function clearSig(id) {
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  const key = id==='sig-test'?'testSig':id==='sig-check'?'checkedSig':'witnessSig';
+  D.signs[key]=null;
+}
+function afterRender() {
+  ['sig-test','sig-check','sig-witness'].forEach(id => {
+    setTimeout(() => initSig(id), 50);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// STEP RENDERS
+// ════════════════════════════════════════════════════
+function renderStep1() {
+  const {info:i} = D;
+  return `<div class="panel">${sec('ข้อมูลหน่วยงาน / Site Information', `
+    ${field('ชื่อลูกค้า (Customer)*', inp('info__customer',i.customer,'ชื่อบริษัท'))}
+    ${field('Site / สาขา*', inp('info__site',i.site,'ชื่อสาขา'))}
+    <div class="grid2">
+      ${field('Location', inp('info__location',i.location,'MDB SUBSTATION'))}
+      ${field('Device No.', inp('info__device',i.device,'TR X,XXX kVA'))}
+    </div>
+    <div class="grid2">
+      ${field('วันที่ปฏิบัติงาน', inp('info__date',i.date,'วว/ดด/ปปปป'))}
+      ${field('เลขที่ใบงาน', inp('info__workOrder',i.workOrder,'WO-XXXX'))}
+    </div>
+    ${field('ชื่อวิศวกร / ช่าง', inp('info__engineer',i.engineer,'ชื่อ-นามสกุล'))}
+    ${field('ประเภทงาน', `<select id="info__jobType" onchange="save('info__jobType',this.value)"><option value="" ${!D.info.jobType?'selected':''}>-- โปรดเลือกประเภทงาน --</option>${['Transformer','MDB','Transformer + MDB','Capacitor Bank','Cable','อื่นๆ'].map(o=>`<option value="${o}" ${D.info.jobType===o?'selected':''}>${o}</option>`).join('')}</select>`)}
+  `)}
+  </div>`;
+}
+
+function renderStep2() {
+  const phasePicker = (prefix, vals) => `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+    ${['Phase A (L1)','Phase B (L2)','Phase C (L3)'].map((lbl,i) => {
+      const colors = [['#fdecea','#c0392b'],['#e8f7ee','#1a8a4a'],['#f3eef9','#5B2D8E']];
+      return `<div style="text-align:center;padding:8px;border-radius:8px;background:${colors[i][0]};border:1px solid ${colors[i][1]}">
+        <div style="font-size:10px;font-weight:700;color:${colors[i][1]};margin-bottom:4px">${lbl}</div>
+        <select style="width:100%;font-size:11px;border:1px solid ${colors[i][1]};border-radius:5px;padding:3px;font-family:inherit" onchange="save('${prefix}__${i}',this.value)">
+          ${['','Normal','Reversed','Missing'].map(o=>`<option value="${o}" ${vals[i]===o?'selected':''}>${o||'-- เลือก --'}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('')}
+  </div>`;
+  return `
+  <div class="panel">${sec('ตรวจวัดแรงดัน ก่อนปฏิบัติงาน','','')}
+    ${V_PHASES.map(ph => `<div class="v-row"><span class="v-phase">${ph}</span><input class="v-inp" id="vb__${ph}" value="${esc(D.voltBefore[ph]||'')}" placeholder="0.0" oninput="save('vb__${ph}',this.value)"><span class="v-unit">V</span></div>`).join('')}
+  </div>
+  <div class="panel">${sec('Phase Rotation ก่อนปฏิบัติงาน','')} ${phasePicker('pb',D.phaseBefore)}</div>
+  <div class="panel">${sec('ตรวจวัดแรงดัน หลังปฏิบัติงาน','','')}<div style="height:6px"></div>
+    ${V_PHASES.map(ph => `<div class="v-row"><span class="v-phase">${ph}</span><input id="va__${ph}" value="${esc(D.voltAfter[ph]||'')}" placeholder="0.0" oninput="save('va__${ph}',this.value)"><span class="v-unit">V</span></div>`).join('')}
+  </div>
+  <div class="panel">${sec('Phase Rotation หลังปฏิบัติงาน','')} ${phasePicker('pa',D.phaseAfter)}</div>`;
+}
+
+function renderStep3() {
+  return `<div class="panel">${sec('ภาพประกอบการปฏิบัติงาน','')}
+  <div class="photo-grid">
+    ${PHOTO_LABELS.map(lbl => {
+      const ph = D.photos[lbl];
+      return `<div>
+        <div class="photo-label">${lbl}</div>
+        ${ph?.url
+          ? `<div style="position:relative">
+               <img src="${ph.url}" style="width:100%;height:90px;object-fit:cover;border-radius:7px;border:2px solid var(--brand)">
+               <button onclick="removePhoto('${lbl.replace(/'/g,"\\'")}')" style="position:absolute;top:4px;right:4px;background:#c0392b;color:#fff;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:11px;font-weight:700">✕</button>
+               <div style="font-size:10px;color:var(--muted);margin-top:2px">${esc(ph.name)}</div>
+             </div>`
+          : `<div class="photo-box" onclick="triggerPhoto('${lbl.replace(/'/g,"\\'")}')" >
+               <span style="font-size:24px">📷</span>
+               <span style="font-size:11px;color:var(--muted)">แตะอัพโหลด</span>
+             </div>`
+        }
+      </div>`;
+    }).join('')}
+  </div></div>`;
+}
+
+function renderStep4() {
+  const measRow = (section, i, row, volt) => {
+    const r = D.meas[section][i+'_r']||''; const st = D.meas[section][i+'_s']||'';
+    return `<tr>
+      <td style="text-align:left;padding:5px 8px">${row}</td>
+      ${volt!==undefined?`<td>${volt}</td>`:''}
+      <td><input id="${section=='insul'?'mi':section=='contact'?'mc':section=='mdbInsul'?'mm':section=='cable'?'mca':'me'}__${i}_r" value="${esc(r)}" placeholder="0.00" oninput="save(this.id,this.value)" style="width:72px;padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:12px;text-align:center;font-family:inherit"></td>
+      <td><div class="pf-group" style="justify-content:center">${['Pass','Fail'].map(o=>{let cls='pf-btn';if(st===o)cls+=o==='Pass'?' pass':' fail';return`<button class="${cls}" onclick="savePF('${section=='insul'?'mi':section=='contact'?'mc':section=='mdbInsul'?'mm':section=='cable'?'mca':'me'}__${i}_s','${o}')">${o==='Pass'?'✓':'✗'} ${o}</button>`;}).join('')}</div></td>
+    </tr>`;
+  };
+  // Cap visual checks
+  const capVisChecks = ['Cleaning and tightening','PF Controller – Auto Mode','PF Controller – Manual Mode','Magnetic operation check','FUSE check'];
+
+  return `
+  <div class="panel">${sec('Insulation Resistance – Transformer','','')}<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Standard: HV/LV to GND &gt; 1 GΩ</div>
+  <div style="overflow-x:auto"><table class="meas-table"><thead><tr><th style="text-align:left">Test Connection</th><th>Voltage (Vdc)</th><th>Result (GΩ)</th><th>Status</th></tr></thead><tbody>
+    ${INSUL_ROWS.map((r,i) => measRow('insul',i,r,INSUL_VOLTS[i])).join('')}
+  </tbody></table></div></div>
+
+  <div class="panel">${sec('Circuit Breaker Contact Resistance','','')}<div style="font-size:11px;color:var(--muted);margin-bottom:8px">ACB: 200–250 μΩ | MCCB: 600–850 μΩ | Test Current 100A / 60s</div>
+  <div style="overflow-x:auto"><table class="meas-table"><thead><tr><th style="text-align:left">Connection</th><th>Result (μΩ)</th><th>Status</th></tr></thead><tbody>
+    ${CONTACT_ROWS.map((r,i) => measRow('contact',i,r,undefined)).join('')}
+  </tbody></table></div></div>
+
+  <div class="panel">${sec('MDB Insulation Resistance (500 Vdc)','','')}<div style="overflow-x:auto"><table class="meas-table"><thead><tr><th style="text-align:left">Test Connection</th><th>Result (GΩ)</th><th>Status</th></tr></thead><tbody>
+    ${MDB_ROWS.map((r,i) => measRow('mdbInsul',i,r,undefined)).join('')}
+  </tbody></table></div></div>
+
+  <div class="panel">${sec('Power Cable Insulation Resistance (500 Vdc)','','')}<div style="overflow-x:auto"><table class="meas-table"><thead><tr><th style="text-align:left">Test Connection</th><th>Result (GΩ)</th><th>Status</th></tr></thead><tbody>
+    ${CABLE_ROWS.map((r,i) => measRow('cable',i,r,undefined)).join('')}
+  </tbody></table></div></div>
+
+  <div class="panel">${sec('Earthing Resistance','','')}<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Pass: RE &lt; 5Ω | Pass with Condition: 5–25Ω</div>
+  <div style="overflow-x:auto"><table class="meas-table"><thead><tr><th style="text-align:left">Location</th><th>Result (Ω)</th><th>Status</th></tr></thead><tbody>
+    ${EARTH_ROWS.map((r,i) => measRow('earthing',i,r,undefined)).join('')}
+  </tbody></table></div></div>
+
+  <!-- Capacitor Bank -->
+  <div class="panel">
+    <div class="sec-title"><div class="sec-bar" style="background:#0E7490"></div><span class="sec-label">Switching Capacitor Bank</span></div>
+    <div class="grid3">
+      <div>
+        <div style="font-weight:700;font-size:11px;color:#0E7490;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">CAPACITOR</div>
+        ${field('Manufacture',inp('cap__capMfg',D.cap.capMfg,'-'))}
+        ${field('Type',inp('cap__capType',D.cap.capType,'-'))}
+        ${field('Rated (kVar)',inp('cap__capKvar',D.cap.capKvar,'0'))}
+        ${field('Year of Mfg.',inp('cap__capYear',D.cap.capYear,'-'))}
+        ${field('Frequency (Hz)',inp('cap__capFreq',D.cap.capFreq,'50'))}
+        ${field('Rated Voltage (V)',inp('cap__capVolt',D.cap.capVolt,'-'))}
+        ${field('Rated Current (A)',inp('cap__capCurr',D.cap.capCurr,'-'))}
+        ${field('Reactance (Ω)',inp('cap__capReact',D.cap.capReact,'-'))}
+        ${field('Capacitance (μF)',inp('cap__capCap',D.cap.capCap,'-'))}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:11px;color:#0E7490;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">MAGNETIC</div>
+        ${field('Manufacture',inp('cap__magMfg',D.cap.magMfg,'-'))}
+        ${field('Type',inp('cap__magType',D.cap.magType,'-'))}
+        <div style="margin-top:14px;font-weight:700;font-size:11px;color:#0E7490;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">FUSE</div>
+        ${field('Manufacture',inp('cap__fuseMfg',D.cap.fuseMfg,'-'))}
+        ${field('Type',inp('cap__fuseType',D.cap.fuseType,'-'))}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:11px;color:#0E7490;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">PF CONTROLLER</div>
+        ${field('Manufacture',inp('cap__pfcMfg',D.cap.pfcMfg,'-'))}
+        ${field('Type',inp('cap__pfcType',D.cap.pfcType,'-'))}
+        ${field('Serial No.',inp('cap__pfcSerial',D.cap.pfcSerial,'-'))}
+        ${field('Frequency (Hz)',inp('cap__pfcFreq',D.cap.pfcFreq,'50'))}
+        ${field('Rated Voltage (V)',inp('cap__pfcVolt',D.cap.pfcVolt,'-'))}
+        ${field('CT Ratio (A)',inp('cap__pfcCt',D.cap.pfcCt,'-'))}
+        ${field('PF Setting',inp('cap__pfcPf',D.cap.pfcPf,'-'))}
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">1. Visual Inspection</div>
+      ${capVisChecks.map((lbl,i)=>`
+        <div class="check-item">
+          <div class="chk-box ${D.cap.visChecks[i]?'on':''}" onclick="toggleCheck('capvis',${i})">${D.cap.visChecks[i]?'✓':''}</div>
+          <div style="flex:1"><div style="font-size:13px">${lbl}</div>
+          <input value="${esc(D.cap.visRemarks[i])}" placeholder="หมายเหตุ..." oninput="save('capvis__${i}',this.value)" style="margin-top:3px;width:100%;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:5px;font-family:inherit"></div>
+        </div>`).join('')}
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div style="font-weight:700;font-size:13px">2. Capacitance Measurement</div>
+        <div class="pf-group">
+          ${['Pass','Pass with Condition','Fail'].map(o=>{let cls='pf-btn';if(D.cap.measStatus===o)cls+=o==='Pass'?' pass':o==='Fail'?' fail':' warn';return`<button class="${cls}" style="font-size:11px" onclick="savePF('cap__measStatus','${o}')">${o==='Pass'?'✓ Pass':o==='Fail'?'✗ Fail':'⚠ Pass w/Cond.'}</button>`;}).join('')}
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">มาตรฐาน: +10% / -5% ของ Rated Capacitance</div>
+      <div style="overflow-x:auto">
+        <table class="cap-table">
+          <thead><tr><th style="min-width:30px">Step</th><th>Phase AB (μF)</th><th>Phase BC (μF)</th><th>Phase CA (μF)</th><th>Expected (μF)</th><th style="min-width:70px">Fuse</th><th style="min-width:70px">Magnetic</th><th>Remark</th></tr></thead>
+          <tbody>${D.cap.steps.map((s,i)=>`<tr>
+            <td style="font-weight:700;color:#0E7490">${i+1}</td>
+            ${['ab','bc','ca','exp'].map(f=>`<td><input id="capstep__${i}__${f}" value="${esc(s[f])}" placeholder="0.0" oninput="save(this.id,this.value)"></td>`).join('')}
+            <td><div style="display:flex;gap:3px;justify-content:center">
+              <button class="pf-sm ${s.fuseP?'p':''}" onclick="toggleCapStep(${i},'fuseP')">P</button>
+              <button class="pf-sm ${s.fuseF?'f':''}" onclick="toggleCapStep(${i},'fuseF')">F</button>
+            </div></td>
+            <td><div style="display:flex;gap:3px;justify-content:center">
+              <button class="pf-sm ${s.magP?'p':''}" onclick="toggleCapStep(${i},'magP')">P</button>
+              <button class="pf-sm ${s.magF?'f':''}" onclick="toggleCapStep(${i},'magF')">F</button>
+            </div></td>
+            <td><input id="capstep__${i}__rem" value="${esc(s.rem)}" placeholder="-" oninput="save(this.id,this.value)" style="width:80px"></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;padding:8px 10px;background:#E0F2F7;border-radius:7px;font-size:11px;color:#0E7490">
+        ✎ Capacitance of Capacitor ควรอยู่ในช่วง <strong>+10% / -5%</strong> ของค่า Rated Capacitance
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStep5() {
+  return `
+  <div class="panel">${sec('Transformer Name Plate','')}
+  <div class="grid2">
+    ${field('Manufacture',inp('tr__mfg',D.tr.mfg,'-'))}
+    ${field('Serial No.',inp('tr__serial',D.tr.serial,'-'))}
+    ${field('Rated Power (kVA)',inp('tr__power',D.tr.power,'0'))}
+    ${field('Frequency (Hz)',inp('tr__freq',D.tr.freq,'50'))}
+    ${field('Rated Voltage HV (V)',inp('tr__hvV',D.tr.hvV,'-'))}
+    ${field('Rated Voltage LV (V)',inp('tr__lvV',D.tr.lvV,'-'))}
+    ${field('Vector Group',inp('tr__vector',D.tr.vector,'DYn11'))}
+  </div></div>
+
+  <div class="panel">${sec('Visual Inspection Checklist','')}
+    ${TR_CHECKS.map((lbl,i)=>`
+      <div class="check-item">
+        <div class="chk-box ${D.tr.checks[i].on?'on':''}" onclick="toggleCheck('tr',${i})">${D.tr.checks[i].on?'✓':''}</div>
+        <div style="flex:1"><div style="font-size:13px">${lbl}</div>
+        <input value="${esc(D.tr.checks[i].rem)}" placeholder="หมายเหตุ..." oninput="save('trck__${i}',this.value)" style="margin-top:3px;width:100%;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:5px;font-family:inherit"></div>
+      </div>`).join('')}
+  </div>
+
+  <div class="panel">${sec('Oil Insulation Testing','','')}<div style="font-size:11px;color:var(--muted);margin-bottom:10px">มาตรฐาน: &gt; 32 kV/2.5mm</div>
+    ${[1,2,3,4,5,6].map(n=>`
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
+        <span style="min-width:20px;font-weight:700;color:var(--brand);font-size:13px">${n}.</span>
+        <input id="troil__t${n}" value="${esc(D.tr.oil['t'+n])}" placeholder="kV/2.5mm" oninput="save(this.id,this.value)"
+          style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;font-family:inherit">
+        <span style="font-size:11px;color:var(--muted)">kV/2.5mm</span>
+      </div>`).join('')}
+    <div style="margin-top:8px">${pfGroup('troil__status',D.tr.oil.status)}</div>
+  </div>`;
+}
+
+function renderStep6() {
+  const sigPad = (id, key, name) => `
+    <div>
+      <div class="field"><label>${name}</label>
+        <input id="sg__${key}Name" value="${esc(D.signs[key+'Name']||'')}" placeholder="กรอกชื่อ-นามสกุล" oninput="save('sg__${key}Name',this.value)">
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">ลายเซ็น</div>
+      <div class="sig-wrap">
+        <canvas id="${id}" width="600" height="140"></canvas>
+        <button class="sig-clear" onclick="clearSig('${id}')">ล้าง</button>
+      </div>
+      ${D.signs[key+'Sig']?'<div style="font-size:11px;color:var(--pass);margin-top:3px">✓ ลงนามแล้ว</div>':''}
+    </div>`;
+  return `
+  <div class="panel">${sec('สรุปผลการปฏิบัติงาน','')}
+    <div style="background:var(--brandBg);border-radius:9px;padding:13px;border:1px solid rgba(91,45,142,.15);font-size:13px;line-height:1.9">
+      <strong>ลูกค้า:</strong> ${esc(D.info.customer)}<br>
+      <strong>Site:</strong> ${esc(D.info.site)} | <strong>Device:</strong> ${esc(D.info.device)}<br>
+      <strong>วันที่:</strong> ${esc(D.info.date)} | <strong>ใบงาน:</strong> ${esc(D.info.workOrder)||'–'}<br>
+      <strong>วิศวกร/ช่าง:</strong> ${esc(D.info.engineer)}
+    </div>
+  </div>
+  <div class="panel">${sec('ลงนามผู้รับผิดชอบ','')}
+    <div style="display:flex;flex-direction:column;gap:18px">
+      ${sigPad('sig-test','test','ผู้ทดสอบ (Test by) – PEA')}
+      ${sigPad('sig-check','checked','ผู้ตรวจสอบ (Checked by) – PEA')}
+      ${sigPad('sig-witness','witness','สักขีพยาน / ลูกค้า (Witnessed by)')}
+    </div>
+    <div style="margin-top:16px;padding:12px;background:var(--accentBg,#FEF3DC);border-radius:9px;border:1px solid rgba(232,160,32,.3);font-size:12px;color:var(--warn)">
+      ⚠️ กรุณาตรวจสอบข้อมูลทุก Step ก่อนกด <strong>"ดูตัวอย่าง PDF"</strong> เพื่อ preview และ Export ได้ทันที
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════
+// PDF DOCUMENT BUILDER
+// ════════════════════════════════════════════════════
+function buildPDFDoc() {
+  const pf = v => v==='Pass'?'<span class="pdf-pass">✓ Pass</span>':v==='Fail'?'<span class="pdf-fail">✗ Fail</span>':v||'–';
+  const chk = v => `<span style="color:${v?'#1a8a4a':'#9ca3af'};font-weight:700">${v?'✓':'☐'}</span>`;
+  const row = (lbl,val,unt='') => `<div class="pdf-row"><span class="lbl">${lbl}</span><span class="val">${val||'–'}</span>${unt?`<span class="unt">${unt}</span>`:''}</div>`;
+  const tbl = (hdrs,rows,cls='') => `<table class="pdf-table ${cls}"><thead><tr>${hdrs.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr>${r.map(c=>`<td>${c??'–'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+
+  const photoHtml = Object.entries(D.photos).filter(([,v])=>v?.url).map(([k,v])=>`
+    <div><img src="${v.url}"><div class="pdf-photo-cap">${esc(k)}</div></div>`).join('');
+
+  return `
+  <div class="pdf-header">
+    <div class="pdf-badge">PEA</div>
+    <div>
+      <div class="pdf-title">PEA Service 888 — Field Inspection Report</div>
+      <div class="pdf-sub">Provincial Electricity Authority | พิมพ์: ${new Date().toLocaleString('th-TH')}</div>
+    </div>
+  </div>
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd">1. ข้อมูลเบื้องต้น / Site Information</div>
+    <div class="pdf-sec-body">
+      <div class="pdf-grid2">
+        ${row('ลูกค้า (Customer)',D.info.customer)}
+        ${row('Site / สาขา',D.info.site)}
+        ${row('Location',D.info.location)}
+        ${row('Device No.',D.info.device)}
+        ${row('วันที่ปฏิบัติงาน',D.info.date)}
+        ${row('เลขที่ใบงาน',D.info.workOrder)}
+        ${row('วิศวกร / ช่าง',D.info.engineer)}
+        ${row('ประเภทงาน',D.info.jobType)}
+      </div>
+    </div>
+  </div>
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd">2. ตรวจวัดแรงดันและ Phase Rotation</div>
+    <div class="pdf-sec-body">
+      <div class="pdf-grid2">
+        <div><div style="font-weight:700;color:var(--brand);font-size:10px;margin-bottom:4px">ก่อนปฏิบัติงาน</div>
+          ${V_PHASES.map(ph=>row(ph,D.voltBefore[ph],'V')).join('')}
+          ${row('Phase Rotation',[0,1,2].map(i=>D.phaseBefore[i]||'–').join(' / '))}
+        </div>
+        <div><div style="font-weight:700;color:#1a8a4a;font-size:10px;margin-bottom:4px">หลังปฏิบัติงาน</div>
+          ${V_PHASES.map(ph=>row(ph,D.voltAfter[ph],'V')).join('')}
+          ${row('Phase Rotation',[0,1,2].map(i=>D.phaseAfter[i]||'–').join(' / '))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  ${photoHtml ? `<div class="pdf-sec">
+    <div class="pdf-sec-hd">3. ภาพประกอบการปฏิบัติงาน</div>
+    <div class="pdf-sec-body"><div class="pdf-photo-grid">${photoHtml}</div></div>
+  </div>` : ''}
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd">4. ค่าวัดต่างๆ</div>
+    <div class="pdf-sec-body">
+      <div style="font-weight:700;margin-bottom:3px">Insulation Resistance – Transformer (Should be &gt; 1 GΩ)</div>
+      ${tbl(['Test Connection','Voltage (Vdc)','Result (GΩ)','Status'],INSUL_ROWS.map((r,i)=>[r,INSUL_VOLTS[i],D.meas.insul[i+'_r']||'–',pf(D.meas.insul[i+'_s'])]))}
+      <div style="font-weight:700;margin:8px 0 3px">Circuit Breaker Contact Resistance</div>
+      ${tbl(['Connection','Result (μΩ)','Status'],CONTACT_ROWS.map((r,i)=>[r,D.meas.contact[i+'_r']||'–',pf(D.meas.contact[i+'_s'])]))}
+      <div style="font-weight:700;margin:8px 0 3px">MDB Insulation Resistance (500 Vdc)</div>
+      ${tbl(['Test Connection','Result (GΩ)','Status'],MDB_ROWS.map((r,i)=>[r,D.meas.mdbInsul[i+'_r']||'–',pf(D.meas.mdbInsul[i+'_s'])]))}
+      <div style="font-weight:700;margin:8px 0 3px">Power Cable Insulation Resistance (500 Vdc)</div>
+      ${tbl(['Test Connection','Result (GΩ)','Status'],CABLE_ROWS.map((r,i)=>[r,D.meas.cable[i+'_r']||'–',pf(D.meas.cable[i+'_s'])]))}
+      <div style="font-weight:700;margin:8px 0 3px">Earthing Resistance (Pass &lt; 5Ω)</div>
+      ${tbl(['Location','Result (Ω)','Status'],EARTH_ROWS.map((r,i)=>[r,D.meas.earthing[i+'_r']||'–',pf(D.meas.earthing[i+'_s'])]))}
+    </div>
+  </div>
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd teal">4b. Switching Capacitor Bank</div>
+    <div class="pdf-sec-body">
+      <div class="pdf-grid3" style="margin-bottom:8px">
+        <div><div style="font-weight:700;color:#0E7490;font-size:9px;margin-bottom:3px">CAPACITOR</div>
+          ${row('Manufacture',D.cap.capMfg)}${row('Type',D.cap.capType)}${row('Rated kVar',D.cap.capKvar,'kVar')}${row('Capacitance',D.cap.capCap,'μF')}
+        </div>
+        <div><div style="font-weight:700;color:#0E7490;font-size:9px;margin-bottom:3px">MAGNETIC / FUSE</div>
+          ${row('Mag. Mfg',D.cap.magMfg)}${row('Mag. Type',D.cap.magType)}${row('Fuse Mfg',D.cap.fuseMfg)}${row('Fuse Type',D.cap.fuseType)}
+        </div>
+        <div><div style="font-weight:700;color:#0E7490;font-size:9px;margin-bottom:3px">PF CONTROLLER</div>
+          ${row('Manufacture',D.cap.pfcMfg)}${row('Type',D.cap.pfcType)}${row('PF Setting',D.cap.pfcPf)}${row('CT Ratio',D.cap.pfcCt,'A')}
+        </div>
+      </div>
+      <div style="font-weight:700;margin-bottom:4px">Capacitance Measurement – Result: ${D.cap.measStatus?`<span class="${D.cap.measStatus==='Pass'?'pdf-pass':D.cap.measStatus==='Fail'?'pdf-fail':'pdf-warn'}">${D.cap.measStatus}</span>`:'–'}</div>
+      ${tbl(['Step','AB (μF)','BC (μF)','CA (μF)','Expected','Fuse','Magnetic','Remark'],D.cap.steps.map((s,i)=>[i+1,s.ab||'–',s.bc||'–',s.ca||'–',s.exp||'–',s.fuseP?'<span class="pdf-pass">P</span>':s.fuseF?'<span class="pdf-fail">F</span>':'–',s.magP?'<span class="pdf-pass">P</span>':s.magF?'<span class="pdf-fail">F</span>':'–',s.rem||'–']),'teal')}
+    </div>
+  </div>
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd">5. หม้อแปลงไฟฟ้า (Transformer)</div>
+    <div class="pdf-sec-body">
+      <div class="pdf-grid2" style="margin-bottom:8px">
+        ${row('Manufacture',D.tr.mfg)}${row('Serial No.',D.tr.serial)}${row('Rated Power',D.tr.power,'kVA')}${row('Frequency',D.tr.freq,'Hz')}${row('Rated Voltage HV',D.tr.hvV,'V')}${row('Rated Voltage LV',D.tr.lvV,'V')}${row('Vector Group',D.tr.vector)}
+      </div>
+      <div style="font-weight:700;margin-bottom:4px">Visual Inspection Checklist</div>
+      <div class="pdf-chk-grid">
+        ${TR_CHECKS.map((lbl,i)=>`<div class="pdf-chk">${chk(D.tr.checks[i].on)}<span>${lbl}</span>${D.tr.checks[i].rem?`<span style="color:#6b7280"> (${esc(D.tr.checks[i].rem)})</span>`:''}</div>`).join('')}
+      </div>
+      <div style="font-weight:700;margin:8px 0 3px">Oil Insulation Testing (Should be &gt; 32 kV/2.5mm)</div>
+      ${tbl(['Test No.','Measurement (kV/2.5mm)'],[[1,D.tr.oil.t1||'–'],[2,D.tr.oil.t2||'–'],[3,D.tr.oil.t3||'–'],[4,D.tr.oil.t4||'–'],[5,D.tr.oil.t5||'–'],[6,D.tr.oil.t6||'–']])}
+      ${row('ผลรวม',pf(D.tr.oil.status))}
+    </div>
+  </div>
+
+  <div class="pdf-sec">
+    <div class="pdf-sec-hd">6. ลงนาม / Signatures</div>
+    <div class="pdf-sec-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        ${[{role:'Test by',key:'test',co:'Provincial Electricity Authority'},{role:'Checked by',key:'checked',co:'Provincial Electricity Authority'},{role:'Witnessed by',key:'witness',co:D.info.customer}].map(s=>`
+          <div class="sig-box">
+            <div style="font-size:10px;font-weight:700;color:var(--brand);margin-bottom:4px">${s.role}</div>
+            ${D.signs[s.key+'Sig']?`<img src="${D.signs[s.key+'Sig']}">`:` <div class="sig-line"></div>`}
+            <div style="font-size:10px;font-weight:600">${esc(D.signs[s.key+'Name'])||'–'}</div>
+            <div style="font-size:9px;color:#6b7280">${s.co}</div>
+            <div style="font-size:9px;color:#6b7280">${D.info.date}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="pdf-footer">Generated by PEA Service 888 | Provincial Electricity Authority | ${new Date().toLocaleString('th-TH')}</div>`;
+}
+
+// ════════════════════════════════════════════════════
+// PDF MODAL
+// ════════════════════════════════════════════════════
+function openPDFModal() {
+  const html = buildPDFDoc();
+  // Put in off-screen render div
+  document.getElementById('pdf-doc').innerHTML = html;
+  // Also put in visible preview div inside modal
+  document.getElementById('pdf-preview').innerHTML = `<div class="pdf-doc-inner" style="background:#fff;max-width:794px;margin:0 auto;padding:24px 28px;font-family:'Segoe UI','Noto Sans Thai',sans-serif;color:#111;font-size:10px;line-height:1.5">${html}</div>`;
+  document.getElementById('pdf-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePDFModal() {
+  document.getElementById('pdf-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+async function renderAndExportPDF(callerBtnId) {
+  // Build into the off-screen div
+  const el = document.getElementById('pdf-doc');
+  el.innerHTML = buildPDFDoc();
+
+  const callerBtn = callerBtnId ? document.getElementById(callerBtnId) : null;
+  const modalBtn  = document.getElementById('btn-dl-pdf');
+  const setLoading = on => {
+    if(callerBtn) { callerBtn.disabled = on; callerBtn.textContent = on ? '⏳ กำลัง Export...' : '💾 บันทึก & Export PDF'; }
+    if(modalBtn)  { modalBtn.disabled  = on; modalBtn.innerHTML   = on ? '⏳ กำลัง Export...' : '⬇ Export PDF'; }
+  };
+  setLoading(true);
+
+  // Wait for browser to fully render the div before capture
+  await new Promise(r => setTimeout(r, 600));
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+    const pageW = 210, pageH = 297, margin = 8;
+    const printableH = pageH - margin * 2;
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 794,
+      height: el.scrollHeight,
+      windowWidth: 794,
+    });
+
+    const imgW = pageW - margin * 2;
+    let srcY = 0, remaining = canvas.height * imgW / canvas.width, first = true;
+
+    while (remaining > 0) {
+      if (!first) doc.addPage();
+      first = false;
+      const sliceH  = Math.min(remaining, printableH);
+      const slicePx = Math.round(sliceH * canvas.width / imgW);
+
+      const sc = document.createElement('canvas');
+      sc.width  = canvas.width;
+      sc.height = Math.max(1, slicePx);
+      sc.getContext('2d').drawImage(
+        canvas,
+        0, Math.round(srcY * canvas.width / imgW),
+        canvas.width, Math.max(1, slicePx),
+        0, 0,
+        canvas.width, Math.max(1, slicePx)
+      );
+      doc.addImage(sc.toDataURL('image/jpeg', 0.95), 'JPEG', margin, margin, imgW, sliceH);
+      srcY      += sliceH;
+      remaining -= sliceH;
+    }
+
+    const fname = `PEA_Service_888_${(D.info.customer||'Report').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(fname);
+  } catch(e) {
+    alert('Export ไม่สำเร็จ: ' + e.message);
+    console.error(e);
+  }
+  setLoading(false);
+}
+
+// Called from modal "Export PDF" button
+async function exportPDF() {
+  await renderAndExportPDF('btn-dl-pdf');
+}
+
+// Called from Step-6 bottom nav
+async function submitAndExport() {
+  await renderAndExportPDF('btn-submit-export');
+}
+
+// ════════════════════════════════════════════════════
+// MAIN RENDER
+// ════════════════════════════════════════════════════
+function render() {
+  // Rail
+  document.getElementById('rail').innerHTML = STEPS.map(s =>
+    `<button class="rail-btn ${D.step===s.id?'active':''}" onclick="goStep(${s.id})">
+      <span class="ico">${s.icon}</span>${s.label}
+    </button>`).join('');
+  document.getElementById('step-counter').textContent = `${D.step}/${STEPS.length}`;
+
+  // Content
+  const renders = [null,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5,renderStep6];
+  document.getElementById('content').innerHTML = renders[D.step]();
+
+  // Nav
+  const nav = document.getElementById('nav-btns');
+  let html = '';
+  if(D.step > 1) html += `<button class="btn-back" onclick="goStep(${D.step-1})">← ย้อนกลับ</button>`;
+  if(D.step < 6)  html += `<button class="btn-next" onclick="goStep(${D.step+1})">ถัดไป →</button>`;
+  if(D.step === 6) {
+    html += `<button class="btn-preview" onclick="openPDFModal()">👁 ดูตัวอย่าง</button>`;
+    html += `<button class="btn-submit" id="btn-submit-export" onclick="submitAndExport()">💾 บันทึก &amp; Export PDF</button>`;
+  }
+  nav.innerHTML = html;
+
+  afterRender();
+}
+
+function goStep(n) {
+  D.step = n;
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Keyboard close modal
+document.addEventListener('keydown', e => { if(e.key==='Escape') closePDFModal(); });
+
+// Init — wait for DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  render();
+});
+</script>
+</body>
+</html>
